@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Sonix Music</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="titlebar" oncontextmenu="event.preventDefault();">
+    <div class="titlebar-left">
+      <img src="assets/logo.png"
+        style="width:22px;height:22px;border-radius:5px;flex-shrink:0;-webkit-app-region:no-drag;border:none;outline:none"
+        alt="Sonix">
+      <span class="titlebar-name">Sonix</span><span
+        style="font-size:9px;opacity:.3;letter-spacing:3px;text-transform:uppercase;margin-left:5px;font-weight:600;-webkit-app-region:no-drag">MUSIC</span>
+    </div>
+    <div class="drag-area"></div>
+    <div class="window-controls">
+      <button class="wc-btn" onclick="window.api.windowControl('minimize')">
+        <svg width="10" height="1" viewBox="0 0 10 1">
+          <rect width="10" height="1" fill="currentColor" />
+        </svg>
+      </button>
+      <button class="wc-btn" id="max-btn" onclick="toggleMaximize()">
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1" />
+        </svg>
+      </button>
+      <button class="wc-btn close-btn" onclick="window.api.windowControl('close')">
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <line x1="0" y1="0" x2="10" y2="10" stroke="currentColor" stroke-width="1.3" />
+          <line x1="10" y1="0" x2="0" y2="10" stroke="currentColor" stroke-width="1.3" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <aside class="panel-left" id="panel-left">
+      <div class="lib-header">
+        <button class="hamburger-btn" id="hamburger-btn" onclick="toggleAppMenu(event)" title="Menu">
+          <svg id="hamburger-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
+          </svg>
+        </button>
+        <span class="lib-title-text">Library</span>
+        <button class="lib-add-btn" onclick="showAddMenu(event)" title="Create playlist or folder">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="lib-filters">
+        <button class="lib-chip active" onclick="filterLib('all',this)">All</button>
+        <button class="lib-chip" onclick="filterLib('playlists',this)">Playlists</button>
+        <button class="lib-chip" onclick="filterLib('offline',this)">Downloaded</button>
+      </div>
+
+      <div class="lib-search-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="opacity:.4;flex-shrink:0">
+          <path
+            d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+        </svg>
+        <input type="text" id="lib-search-input" placeholder="Search in library"
+          oninput="filterLibItems(this.value);toggleLibSearchClear(this.value)">
+        <button id="lib-search-clear" onclick="clearLibSearch()" title="Clear search"
+          style="display:none;background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0 2px;font-size:14px;line-height:1;flex-shrink:0;opacity:.6"
+          onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.6">✕</button>
+      </div>
+
+
+      <div class="lib-list" id="lib-list">
+        <div class="lib-item lib-pinned" onclick="showLiked()">
+          <div class="lib-item-icon liked-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+            </svg>
+          </div>
+          <div class="lib-item-info">
+            <div class="lib-item-name">Liked Songs</div>
+            <div class="lib-item-meta">Playlist · <span id="liked-count">0</span> songs</div>
+          </div>
+        </div>
+        <div class="lib-section-label"
+          style="display:flex;align-items:center;justify-content:space-between;padding-right:6px">
+          <span>Recently Played</span>
+          <button onclick="clearHistory()" title="Clear history"
+            style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;padding:2px 4px;border-radius:4px;line-height:1;opacity:.6;transition:opacity .15s"
+            onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.6">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+            </svg>
+          </button>
+        </div>
+        <div id="recent-lib-items"></div>
+        <div class="lib-section-label" id="lib-playlists-label" style="display:none">Playlists</div>
+        <div id="playlist-lib-items"></div>
+        <div class="lib-section-label" id="lib-folders-label" style="display:none">Folders</div>
+        <div id="folder-lib-items"></div>
+        <div class="lib-section-label" id="lib-offline-label" style="display:none">Downloaded</div>
+        <div id="offline-lib-items"></div>
+      </div>
+    </aside>
+
+    <main class="panel-center" id="panel-center">
+      <div class="center-topbar">
+        <div class="nav-arrows">
+          <button class="nav-btn" onclick="goBack()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+            </svg>
+          </button>
+          <button class="nav-btn" onclick="goForward()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+            </svg>
+          </button>
+        </div>
+        <button class="nav-btn home-btn" onclick="showHome()" title="Home" style="margin-left:4px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+          </svg>
+        </button>
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:.4;flex-shrink:0">
+            <path
+              d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+          </svg>
+          <input id="search" placeholder="What do you want to hear?" onkeydown="handleKey(event)"
+            oninput="onSearchInput(this.value)">
+        </div>
+        <button class="search-btn" onclick="doSearch()">Search</button>
+
+      </div>
+
+      <div id="home-view" class="scroll-area">
+        <section class="home-section">
+          <div class="shortcuts-grid" id="shortcuts-grid">
+            <div class="shortcut-item" onclick="showLiked()">
+              <div class="shortcut-icon liked-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+                </svg></div>
+              <span>Liked Songs</span>
+            </div>
+          </div>
+        </section>
+        <section class="home-section" id="section-recent" style="display:none">
+          <div class="section-header">
+            <h2 class="section-title">Recently Played</h2>
+          </div>
+          <div class="cards-row" id="recent-cards"></div>
+        </section>
+        <section class="home-section" id="section-downloads" style="display:none">
+          <div class="section-header">
+            <h2 class="section-title">Recently Downloaded</h2>
+          </div>
+          <div class="cards-row" id="downloaded-cards"></div>
+        </section>
+        <section class="home-section">
+          <div class="section-header">
+            <h2 class="section-title">Popular Songs</h2>
+            <button class="show-all-btn" onclick="loadPopular('top hits 2025')">Show all</button>
+          </div>
+          <div class="cards-row" id="popular-cards">
+            <div class="cards-loading">Loading…</div>
+          </div>
+        </section>
+        <section class="home-section">
+          <div class="section-header">
+            <h2 class="section-title">Popular Artists</h2>
+          </div>
+          <div class="cards-row artists-row" id="artist-cards">
+            <div class="cards-loading">Loading…</div>
+          </div>
+        </section>
+        <section class="home-section" id="section-added" style="display:none">
+          <div class="section-header">
+            <h2 class="section-title">Recently Liked</h2>
+          </div>
+          <div class="cards-row" id="added-cards"></div>
+        </section>
+        <section class="home-section">
+          <div class="section-header">
+            <h2 class="section-title">Popular Albums</h2>
+            <button class="show-all-btn" onclick="loadPopular('best albums playlist 2024')">Show all</button>
+          </div>
+          <div class="cards-row" id="album-cards">
+            <div class="cards-loading">Loading…</div>
+          </div>
+        </section>
+      </div>
+
+      <div id="search-view" class="scroll-area hidden">
+        <h2 class="section-title" style="padding:0 4px 16px" id="search-heading">Results</h2>
+        <div id="loading" class="loading hidden">
+          <div class="spinner"></div>
+        </div>
+        <div id="results" class="results-grid"></div>
+      </div>
+
+      <div id="liked-view" class="liked-view-outer hidden">
+        <div class="liked-banner">
+          <div class="liked-banner-icon"><svg width="64" height="64" viewBox="0 0 24 24" fill="white">
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+            </svg></div>
+          <div class="liked-banner-info">
+            <div class="liked-banner-label">Playlist</div>
+            <h1 class="liked-banner-title">Liked Songs</h1>
+            <div class="liked-banner-meta"><span id="liked-hero-count">0</span> songs</div>
+          </div>
+        </div>
+        <div class="liked-actions">
+          <button class="liked-play-btn" onclick="playLikedAll()"><svg width="22" height="22" viewBox="0 0 24 24"
+              fill="black">
+              <path d="M8 5v14l11-7z" />
+            </svg></button>
+          <button class="liked-action-btn" onclick="shuffleLiked()"><svg width="16" height="16" viewBox="0 0 24 24"
+              fill="currentColor">
+              <path
+                d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+            </svg> Shuffle</button>
+          <button class="liked-action-btn" onclick="downloadAllLiked()"><svg width="16" height="16" viewBox="0 0 24 24"
+              fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z" />
+            </svg> Download All</button>
+        </div>
+        <div class="track-list-header">
+          <div class="tlh-num">#</div>
+          <div class="tlh-title">Title</div>
+          <div class="tlh-date">Added</div>
+          <div class="tlh-dur"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
+            </svg></div>
+          <div class="tlh-actions"></div>
+        </div>
+        <div id="liked-list" class="track-list"></div>
+        <div id="liked-empty" class="empty-state" style="display:none">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style="opacity:.15">
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+          </svg>
+          <p>Songs you like will appear here</p>
+        </div>
+      </div>
+
+      <div id="playlist-view" class="liked-view-outer hidden">
+        <div class="liked-banner" id="pl-banner">
+          <div class="liked-banner-icon" id="pl-icon" style="background:linear-gradient(135deg,#1a3a2a,#0d1f15)">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="white" style="opacity:.5">
+              <path
+                d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
+            </svg>
+          </div>
+          <div class="liked-banner-info">
+            <div class="liked-banner-label">Playlist</div>
+            <h1 class="liked-banner-title" id="pl-name">My Playlist</h1>
+            <div class="liked-banner-meta"><span id="pl-count">0</span> songs</div>
+          </div>
+        </div>
+        <div class="liked-actions">
+          <button class="liked-play-btn" onclick="playPlaylistAll()"><svg width="22" height="22" viewBox="0 0 24 24"
+              fill="black">
+              <path d="M8 5v14l11-7z" />
+            </svg></button>
+          <button class="liked-action-btn" id="pl-shuffle-btn" onclick="shufflePlaylist()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+            </svg>
+            Shuffle
+          </button>
+          <button class="liked-action-btn" onclick="downloadAllPlaylist()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z" />
+            </svg>
+            Download All
+          </button>
+        </div>
+        <div class="track-list-header">
+          <div class="tlh-num">#</div>
+          <div class="tlh-title">Title</div>
+          <div class="tlh-date">Added</div>
+          <div class="tlh-dur"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z" />
+            </svg></div>
+          <div class="tlh-actions"></div>
+        </div>
+        <div id="playlist-track-list" class="track-list"></div>
+      </div>
+    </main>
+
+    <aside class="panel-right" id="panel-right">
+      <div class="rp-header">
+        <button class="rp-tab active" id="tab-nowplaying" onclick="switchRightTab('nowplaying')">Now Playing</button>
+        <button class="rp-tab" id="tab-queue" onclick="switchRightTab('queue')">Queue</button>
+      </div>
+
+      <div id="rp-nowplaying" class="rp-body">
+        <div class="rp-art-wrap">
+          <div class="rp-idle-banner" id="rp-idle-banner">
+            <svg width="52" height="52" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="16" r="15" fill="#6c47ff" opacity=".9" />
+              <rect x="7" y="12" width="2.5" height="8" rx="1.25" fill="white" />
+              <rect x="11" y="9" width="2.5" height="14" rx="1.25" fill="white" />
+              <rect x="15" y="6" width="2.5" height="20" rx="1.25" fill="white" />
+              <rect x="19" y="9" width="2.5" height="14" rx="1.25" fill="white" />
+              <rect x="23" y="12" width="2.5" height="8" rx="1.25" fill="white" />
+            </svg>
+            <div class="rp-idle-name">Sonix</div>
+            <div class="rp-idle-slogan">Your vibe, your sound.</div>
+          </div>
+          <img id="rp-art" src="" alt="" class="rp-art hidden">
+        </div>
+
+        <div class="rp-track">
+          <div class="rp-track-text">
+            <div class="rp-track-title" id="rp-title">—</div>
+            <div class="rp-track-artist" id="rp-artist">No song playing</div>
+          </div>
+          <button class="rp-like-btn" id="rp-like-btn" onclick="toggleLikeCurrent()" title="Save to Liked Songs">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="rp-actions" id="rp-actions" style="display:none">
+          <button class="rp-action-btn" onclick="rpAddToQueue()" title="Add to queue">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 6h16v2H4zm0 5h16v2H4zm10 5H4v2h10v-2zm6-2l-5 5 5 5v-3h4v-4h-4v-3z" />
+            </svg>
+            <span>Queue</span>
+          </button>
+          <button class="rp-action-btn" onclick="rpAddToPlaylist(event)" title="Add to playlist">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14 10H3v2h11v-2zm0-4H3v2h11V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM3 16h7v-2H3v2z" />
+            </svg>
+            <span>Playlist</span>
+          </button>
+          <button class="rp-action-btn" onclick="rpDownload()" title="Download">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z" />
+            </svg>
+            <span>Download</span>
+          </button>
+          <button class="rp-action-btn" onclick="rpShare()" title="Share">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+            </svg>
+            <span>Share</span>
+          </button>
+        </div>
+
+        <div class="rp-status" id="rp-status"></div>
+
+        <div class="rp-section" id="rp-about" style="display:none">
+          <div class="rp-section-title">About the Artist</div>
+          <div class="rp-artist-card">
+            <div class="rp-artist-img-wrap">
+              <img id="rp-artist-img" src="" alt="" class="rp-artist-img" style="display:none">
+              <div class="rp-artist-img-placeholder" id="rp-artist-placeholder">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="opacity:.3">
+                  <path
+                    d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+            </div>
+            <div class="rp-artist-info">
+              <div class="rp-artist-name" id="rp-artist-name">—</div>
+              <div class="rp-artist-desc" id="rp-artist-desc">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rp-section" id="rp-credits" style="display:none">
+          <div class="rp-section-title">Credits</div>
+          <div id="rp-credits-list" class="rp-credits-list"></div>
+        </div>
+
+        <div class="rp-section" id="rp-lyrics-section" style="display:none">
+          <div class="rp-lyrics-header" onclick="toggleLyricsCollapse()">
+            <div class="rp-section-title" style="margin:0">Lyrics</div>
+            <div style="display:flex;gap:5px;align-items:center">
+              <button class="lyrics-expand-btn" onclick="event.stopPropagation();expandLyrics()" title="Expand">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
+                </svg>
+              </button>
+              <svg id="lyrics-chevron" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"
+                style="transition:transform .2s;opacity:.45">
+                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+              </svg>
+            </div>
+          </div>
+          <div class="lyrics-collapsed-wrap" id="lyrics-collapsed-wrap">
+            <div class="lyrics-placeholder-small" id="lyrics-placeholder-small" style="display:none">
+              <span>No lyrics found</span>
+            </div>
+            <div id="lyrics-lines" class="lyrics-lines-collapsed"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="rp-queue" class="rp-body hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0 14px 8px">
+          <div class="rp-section-title" style="margin:0">Queue</div>
+          <button id="queue-clear-btn" onclick="clearQueue()"
+            style="font-size:11px;color:var(--text);background:rgba(255,255,255,0.08);border:none;cursor:pointer;font-family:inherit;padding:4px 10px;border-radius:12px;font-weight:600;transition:background 0.2s"
+            onmouseover="this.style.background='rgba(255,255,255,0.15)'"
+            onmouseout="this.style.background='rgba(255,255,255,0.08)'">Clear all</button>
+        </div>
+        <div id="queue-list" class="queue-list"></div>
+        <div id="queue-empty" class="empty-state">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" style="opacity:.2">
+            <path d="M4 6h16v2H4zm0 5h16v2H4zm10 5H4v2h10v-2zm6-2l-5 5 5 5v-3h4v-4h-4v-3z" />
+          </svg>
+          <p style="font-size:12px">Right-click a song and choose<br>"Add to queue"</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="lyrics-overlay hidden" id="lyrics-overlay">
+    <div class="lyrics-overlay-art">
+      <img id="lyrics-overlay-art" src="" alt="">
+      <div class="lyrics-overlay-track">
+        <div id="lyrics-overlay-title" style="font-size:17px;font-weight:800"></div>
+        <div id="lyrics-overlay-artist" style="font-size:12px;opacity:.55;margin-top:3px"></div>
+      </div>
+    </div>
+    <div class="lyrics-overlay-main">
+      <button class="lyrics-overlay-close" onclick="collapseLyrics()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" />
+        </svg>
+      </button>
+      <div id="lyrics-overlay-lines" class="lyrics-lines-full"></div>
+    </div>
+  </div>
+
+  <div class="player">
+    <div class="player-left">
+      <div class="player-thumb-wrap">
+        <img id="thumb" src="" alt="" class="player-thumb hidden">
+        <div class="player-thumb-placeholder" id="player-thumb-placeholder">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="opacity:.3">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+          </svg>
+        </div>
+      </div>
+      <div class="track-info">
+        <span id="title">No song playing</span>
+        <span id="player-artist" class="player-artist"></span>
+      </div>
+      <button class="heart-btn" id="heart-btn" onclick="toggleLikeCurrent()" title="Save to Liked Songs">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="player-center">
+      <div class="controls">
+        <button class="ctrl-btn extra" id="shuffle-btn" onclick="toggleShuffle()" title="Shuffle">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn secondary" onclick="playPrev()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn primary" id="play-pause-btn" onclick="playPause()">
+          <svg id="icon-play" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          <svg id="icon-pause" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn secondary" onclick="playNext()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 18l8.5-6L6 6v12zm2.5-6 6-4.27v8.54L8.5 12zM16 6h2v12h-2z" />
+          </svg>
+        </button>
+        <button class="ctrl-btn extra" id="repeat-btn" onclick="toggleRepeat()" title="Repeat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
+          </svg>
+        </button>
+      </div>
+      <div class="progress-section">
+        <span id="current-time">0:00</span>
+        <div id="progress-bar" class="progress-bar" onclick="seek(event)">
+          <div id="progress" class="progress-fill"></div>
+        </div>
+        <span id="total-time">--:--</span>
+      </div>
+    </div>
+
+    <div class="player-right">
+      <button class="ctrl-btn extra" onclick="toggleRightPanel()" id="np-toggle" title="Now Playing">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+        </svg>
+      </button>
+      <div class="volume">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="opacity:.5;flex-shrink:0">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+        </svg>
+        <input type="range" min="0" max="1" step="0.02" value="1" oninput="setVolume(this.value)" class="volume-slider">
+      </div>
+    </div>
+  </div>
+
+
+  <div class="popup-menu hidden" id="add-menu">
+    <div class="popup-item" onclick="createPlaylist()">
+      <div class="popup-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Playlist</div>
+        <div class="popup-desc">Create a new playlist</div>
+      </div>
+    </div>
+    <div class="popup-item" onclick="createFolder()">
+      <div class="popup-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Folder</div>
+        <div class="popup-desc">Group your playlists</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="create-playlist-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Playlist</h2>
+        <button class="modal-close" onclick="closeModal('create-playlist-modal')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <input class="modal-input" id="playlist-name-input" placeholder="Give your playlist a name" maxlength="60"
+        onkeydown="if(event.key==='Enter')confirmCreatePlaylist()">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal('create-playlist-modal')">Cancel</button>
+        <button class="modal-btn primary" onclick="confirmCreatePlaylist()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="create-folder-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Create Folder</h2>
+        <button class="modal-close" onclick="closeModal('create-folder-modal')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <input class="modal-input" id="folder-name-input" placeholder="Folder name" maxlength="40"
+        onkeydown="if(event.key==='Enter')confirmCreateFolder()">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal('create-folder-modal')">Cancel</button>
+        <button class="modal-btn primary" onclick="confirmCreateFolder()">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup-menu hidden" id="ctx-menu">
+    <div class="popup-item" id="ctx-like-item" onclick="ctxAddToLiked()">
+      <div class="popup-icon ctx-like-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title" id="ctx-like-label">Save to Liked Songs</div>
+      </div>
+    </div>
+    <div class="popup-item" onclick="ctxAddToQueue()">
+      <div class="popup-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M4 6h16v2H4zm0 5h16v2H4zm10 5H4v2h10v-2zm6-2l-5 5 5 5v-3h4v-4h-4v-3z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Add to queue</div>
+      </div>
+    </div>
+    <div class="popup-item popup-item-arrow" id="ctx-playlist-trigger" onmouseenter="showPlaylistSubmenu()"
+      onmouseleave="scheduleHideSubmenu()">
+      <div class="popup-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14 10H3v2h11v-2zm0-4H3v2h11V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM3 16h7v-2H3v2z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Add to playlist</div>
+      </div>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="margin-left:auto;opacity:.4">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+    </div>
+    <div class="popup-item" id="ctx-download-item" onclick="ctxDownload()">
+      <div class="popup-icon" id="ctx-download-icon"><svg width="14" height="14" viewBox="0 0 24 24"
+          fill="currentColor">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title" id="ctx-download-label">Download</div>
+      </div>
+    </div>
+
+    <div class="popup-item" onclick="ctxShare()">
+      <div class="popup-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Share / Copy link</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup-menu hidden" id="ctx-playlist-submenu" onmouseenter="cancelHideSubmenu()"
+    onmouseleave="scheduleHideSubmenu()">
+    <div class="popup-submenu-search">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="opacity:.4;flex-shrink:0">
+        <path
+          d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+      </svg>
+      <input type="text" placeholder="Find a playlist" oninput="filterPlaylistSubmenu(this.value)"
+        style="background:none;border:none;outline:none;color:var(--text);font-size:12px;width:100%;font-family:inherit">
+    </div>
+    <div class="popup-item" onclick="ctxCreateAndAdd()">
+      <div class="popup-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">New playlist</div>
+      </div>
+    </div>
+    <div id="ctx-playlist-list" style="max-height:180px;overflow-y:auto"></div>
+  </div>
+
+  <div class="modal-overlay hidden" id="share-received-modal">
+    <div class="modal" style="max-width:420px">
+      <div class="modal-header">
+        <h2 class="modal-title">Song Shared with You</h2>
+        <button class="modal-close" onclick="closeModal('share-received-modal')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div id="share-received-info" style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding:0 2px">
+        <img id="share-received-thumb" src=""
+          style="width:56px;height:56px;border-radius:8px;object-fit:cover;background:#222">
+        <div>
+          <div id="share-received-title" style="font-size:15px;font-weight:700"></div>
+          <div id="share-received-artist" style="font-size:12px;opacity:.55;margin-top:3px"></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="modal-btn primary" style="width:100%;justify-content:center" onclick="shareReceivedPlay()">▶ Play
+          Now</button>
+        <button class="modal-btn secondary" style="width:100%;justify-content:center;background:rgba(255,255,255,.07)"
+          onclick="shareReceivedQueue()">＋ Add to Queue</button>
+        <button class="modal-btn secondary" style="width:100%;justify-content:center;background:rgba(255,255,255,.07)"
+          onclick="shareReceivedLike()">♥ Save to Liked Songs</button>
+        <button class="modal-btn secondary" style="width:100%;justify-content:center;background:rgba(255,255,255,.07)"
+          onclick="shareReceivedPlaylist(event)">＋ Add to Playlist</button>
+        <button class="modal-btn secondary" style="width:100%;justify-content:center;background:rgba(255,255,255,.07)"
+          onclick="shareReceivedDownload()">↓ Download</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-menu hidden" id="app-menu">
+    <div class="app-menu-section">Library</div>
+    <div class="app-menu-item" onclick="showLiked();closeAppMenu()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z" />
+      </svg>
+      Liked Songs
+    </div>
+    <div class="app-menu-item app-menu-item-arrow" id="app-menu-playlist-trigger"
+      onmouseenter="showAppMenuPlaylistSub()" onmouseleave="scheduleHideAppMenuSub()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z" />
+      </svg>
+      Playlist
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="margin-left:auto;opacity:.4">
+        <path d="M8 5v14l11-7z" />
+      </svg>
+    </div>
+    <div class="app-menu-divider"></div>
+    <div class="app-menu-section">Sonix</div>
+    <div class="app-menu-item" onclick="showSettingsModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M19.14 12.94c.04-.3.06-.61.06-.94s-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+      </svg>
+      Settings
+    </div>
+    <div class="app-menu-item" onclick="openDiscord()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.03.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z" />
+      </svg>
+      Discord Official
+    </div>
+    <div class="app-menu-item" onclick="manualCheckUpdates()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path
+          d="M12 2v4.1c4.4 0 8 3.6 8 8s-3.6 8-8 8-8-3.6-8-8c0-2.2.9-4.2 2.3-5.7l1.4 1.4C6.8 11 6 12.4 6 14c0 3.3 2.7 6 6 6s6-2.7 6-6-2.7-6-6-6V2z" />
+        <path d="M12 2L8 6h3v4h2V6h3l-4-4z" />
+      </svg>
+      Check for Updates
+    </div>
+    <div class="app-menu-item" onclick="showAboutModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+      </svg>
+      About Sonix
+    </div>
+  </div>
+
+  <div class="popup-menu hidden" id="app-menu-playlist-sub" onmouseenter="cancelHideAppMenuSub()"
+    onmouseleave="scheduleHideAppMenuSub()">
+    <div class="popup-item" onclick="createPlaylist();closeAppMenu()">
+      <div class="popup-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Create Playlist</div>
+      </div>
+    </div>
+    <div id="app-menu-playlist-list" style="max-height:220px;overflow-y:auto"></div>
+  </div>
+
+
+  <div class="modal-overlay hidden" id="about-modal">
+    <div class="modal" style="max-width:360px;text-align:center">
+      <div class="modal-header" style="justify-content:flex-end;margin-bottom:8px">
+        <button class="modal-close" onclick="closeModal('about-modal')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div class="about-modal-art">
+        <img src="assets/logo.png" style="width:54px;height:54px;border-radius:12px" alt="Sonix">
+      </div>
+      <div style="font-size:24px;font-weight:900;margin-bottom:4px">Sonix</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Version <span
+          id="about-version">1.0.0</span></div>
+      <div style="font-size:12px;color:var(--text-sub);margin:12px 0;line-height:1.7">
+        <strong style="color:var(--text)">Sound + Mix</strong> — that's Sonix.<br>
+        Born from the belief that great music deserves<br>a great player. Search, stream, build playlists,<br>
+        sync lyrics, and vibe — all in one elegant app.
+      </div>
+      <div style="font-size:11px;color:var(--text-muted)">❤️ Made with Love for everyone ❤️</div>
+      <div class="modal-actions" style="justify-content:center;margin-top:18px">
+        <button class="modal-btn primary" onclick="openDiscord()">Join Discord</button>
+        <button class="modal-btn secondary" onclick="closeModal('about-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="settings-modal">
+    <div class="modal" style="max-width:440px">
+      <div class="modal-header">
+        <h2 class="modal-title">Settings</h2>
+        <button class="modal-close" onclick="closeModal('settings-modal')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <div style="margin-bottom:20px">
+        <div
+          style="font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+          Download Location</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input class="modal-input" id="settings-download-dir" placeholder="Download folder path"
+            style="margin:0;flex:1;font-size:12px">
+          <button class="modal-btn secondary" onclick="browseDownloadDir()"
+            style="padding:10px 14px;flex-shrink:0">Browse</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Downloaded songs will be saved here as .m4a
+          files.</div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeModal('settings-modal')">Cancel</button>
+        <button class="modal-btn primary" onclick="saveSettings()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup-menu hidden" id="lib-ctx-menu">
+    <div class="popup-item" id="lib-ctx-rename">
+      <div class="popup-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Rename</div>
+      </div>
+    </div>
+    <div class="popup-item" id="lib-ctx-delete" style="color:#ff5060">
+      <div class="popup-icon" style="color:#ff5060"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+        </svg></div>
+      <div class="popup-text">
+        <div class="popup-title">Delete</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="update-modal">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header" style="margin-bottom:15px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div
+            style="width:40px;height:40px;border-radius:10px;background:rgba(30,215,96,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--green)">
+              <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5v-2z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="modal-title" style="font-size:16px;margin:0">Update Available!</h2>
+            <div id="update-version-text" style="font-size:12px;color:var(--text-muted);margin-top:2px;font-weight:600">
+              v1.0.0 → v1.1.0</div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeModal('update-modal')">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--text-sub);margin-bottom:14px;line-height:1.6">
+        A new version of Sonix is available to download.
+        Would you like to get it now or later?
+      </p>
+      <div id="updateChangelog" class="changelog-container hidden"></div>
+      <div class="modal-actions" style="margin-top:0">
+        <button class="modal-btn secondary" onclick="closeModal('update-modal')" style="flex:1">Later</button>
+        <button class="modal-btn primary" id="update-download-btn"
+          style="flex:2;background:var(--green);color:#000;font-weight:600">Download Update</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="confirm-modal">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header" style="margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div
+            style="width:36px;height:36px;border-radius:50%;background:rgba(255,80,96,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff5060">
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+            </svg>
+          </div>
+          <h2 class="modal-title" id="confirm-title" style="font-size:15px">Are you sure?</h2>
+        </div>
+        <button class="modal-close" onclick="confirmCancel()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <p id="confirm-desc" style="font-size:13px;color:var(--text-sub);margin-bottom:20px;line-height:1.5"></p>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="confirmCancel()">Cancel</button>
+        <button class="modal-btn primary" style="background:#ff5060" onclick="confirmOk()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="prompt-modal">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-header">
+        <h2 class="modal-title" id="prompt-modal-title" style="font-size:15px">Rename</h2>
+        <button class="modal-close" onclick="promptCancel()">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+          </svg>
+        </button>
+      </div>
+      <input class="modal-input" id="prompt-modal-input" placeholder="Enter name" maxlength="60"
+        onkeydown="if(event.key==='Enter')promptOk();if(event.key==='Escape')promptCancel()">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="promptCancel()">Cancel</button>
+        <button class="modal-btn primary" onclick="promptOk()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
