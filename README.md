@@ -22,6 +22,12 @@
 
 ---
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ShadowNightDev/Sonix-Music/main/assets/sonixmusic1.png" width="100%">
+</p>
+
+---
+
 ## 🎵 About Sonix
 
 Sonix Music is a modern open-source music player built for Windows users who want speed, simplicity, and full control over their listening experience.
