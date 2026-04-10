@@ -5,7 +5,7 @@
 <h1 align="center">🎧 Sonix Music</h1>
 
 <p align="center">
-  Your vibe, your sound — a modern open-source music player for Windows
+  stream, organize, and play your music without limits, subscriptions, or distractions.
 </p>
 
 <p align="center">
@@ -73,26 +73,6 @@ Get the latest version of Sonix Music:
 * ✔ Windows (Primary)
 * ⏳ Linux (Planned)
 * ⏳ macOS (Planned)
-
----
-
-## 🔓 Open Source
-
-Sonix Music is fully open source and licensed under the **GNU GPL v3.0 License**.
-
-You are free to use, modify, and distribute this software in accordance with the license terms.
-
-For more details, see the [LICENSE](LICENSE) file.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions from everyone!
-
-* Fork the repository
-* Create your feature branch
-* Submit a pull request
 
 ---
 
